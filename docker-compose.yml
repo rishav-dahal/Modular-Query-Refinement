@@ -1,0 +1,27 @@
+
+services:
+  backend:
+    build:
+      context: ./backend
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend 
+    volumes:
+      - Frontend_build:/frontend/out # Volume to persist the build output
+  nginx:
+    image: nginx:latest
+    ports:
+      - 80:8080   # Expose port 80 for Nginx and map it to port 8080 in the container
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro # Mount the Nginx configuration file
+      - Frontend_build:/var/www/frontend # Mount the build output to Nginx
+    depends_on:
+      - backend
+      - frontend
+volumes:
+  Frontend_build:
+      
