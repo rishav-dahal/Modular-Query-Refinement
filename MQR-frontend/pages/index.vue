@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 
+const config = useRuntimeConfig()
 const query = ref('')
-// const response = ref(' g97ftvhmr update /pages/index.vue, /assets/css/main.css, /assets/css/main.css?direct, /pages/index.vue?macro=true, /@id/virtual:nuxt:%2Fhome%2Fsandhya%2FDesktop%2FModular-Query-Refinement%2FMQR-frontend%2F.nuxt%2Froutes.mjs (x19)uoihb')
 const response = ref("")
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const isSubmitting = ref(false)
@@ -18,9 +18,18 @@ watch(query, resizeTextarea)
 onMounted(resizeTextarea)
 
 function submitQuery() {
-    if (!query.value.trim()) return
-
     isSubmitting.value = true
+    const url = config.public.api.baseURL + 'query/submit/'
+    const { data, error } = useFetch(url, {
+        method: 'POST',
+        body: { query: query.value }
+    })
+    if (error.value) {
+        console.error('Error submitting query:', error.value)
+        isSubmitting.value = false
+        return
+    }
+    response.value = data.value?.response || "No response received."
     setTimeout(() => {
         isSubmitting.value = false
     }, 1000)
@@ -61,14 +70,12 @@ function submitQuery() {
                                            resize-none transition-all duration-300 hover:border-gray-500/50"
                                     @keyup.enter="submitQuery" rows="4"></textarea>
 
-                                <!-- Character Counter -->
                                 <div class="absolute bottom-4 right-6 flex items-center gap-3">
                                     <span class="text-gray-400 text-sm font-medium">{{ query.length }} chars</span>
                                     <div class="w-2 h-2 bg-gray-500 rounded-full animate-pulse"></div>
                                 </div>
                             </div>
 
-                            <!-- Submit Button -->
                             <div class="flex justify-center">
                                 <button @click="submitQuery" :disabled="!query.trim() || isSubmitting" class="group relative px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-gray-600 to-gray-700 
                                            text-white text-lg sm:text-xl font-bold rounded-2xl shadow-2xl 
