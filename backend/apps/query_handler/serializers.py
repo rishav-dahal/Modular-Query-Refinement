@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Query
+from apps.nlp_engine.tokenization import tokenize_text
 
 class QuerySerializer(serializers.ModelSerializer):
 
@@ -16,7 +17,7 @@ class QuerySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         raw_query = validated_data.get('raw_query')
 
-        refined_query = None # pipeline_process(raw_query)
+        refined_query = tokenize_text(raw_query) # pipeline_process(raw_query)
 
         return Query.objects.create(
             raw_query=raw_query,
