@@ -9,7 +9,6 @@ class Query(models.Model):
     id = models.AutoField(primary_key=True)
     raw_query = models.TextField()
     refined_query = models.TextField()
-    user_id = models.CharField(max_length=100)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
