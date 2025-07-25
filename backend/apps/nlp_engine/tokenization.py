@@ -39,7 +39,7 @@ import spacy
 #     return words
 
 
-def preprocess(text):
+def preprocess(text,flag):
     """
     Preprocesses the input text by cleaning, tokenizing, lemmatizing, and filtering tokens.
     Args:
@@ -57,14 +57,21 @@ def preprocess(text):
     doc = nlp(cleanText)
 
      # 3. Filter tokens: lemmatize, remove stopwords/punctuation, keep only NOUN and ADJ
-    lemmatized_tokens = [
-        token.lemma_.lower()
-        for token in doc
-        if not token.is_stop
-        and not token.is_punct
-        and token.is_alpha
-        and token.pos_ in ["NOUN", "ADJ", "VERB"]
-    ]
+    lemmatized_tokens = []
+    for token in doc:
+        if token.is_stop or token.is_punct or not token.is_alpha:
+            continue
+
+        if flag == "LDA":
+            if token.pos_ in ["NOUN", "ADJ"]:
+                lemmatized_tokens.append(token.lemma_.lower())
+        elif flag == "NONE":
+            if token.pos_ in ["NOUN", "ADJ", "VERB"]:
+                lemmatized_tokens.append(token.lemma_.lower())
+        else:
+            # Default fallback: keep all content words
+            if token.pos_ in ["NOUN", "ADJ", "VERB"]:
+                lemmatized_tokens.append(token.lemma_.lower())
 
     return lemmatized_tokens
 

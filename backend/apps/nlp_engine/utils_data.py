@@ -29,9 +29,24 @@ def load_models():
     """
     import os
 
-    optimal_lda_model = os.path.join(MODEL_DIR, 'lda_model.model')
-    optimal_lda_dict = os.path.join(MODEL_DIR, 'lda_dict.dict')
-    optimal_model = models.LdaModel.load(optimal_lda_model)
-    dictionary = corpora.Dictionary.load(optimal_lda_dict)
+    #LSA without verb
+    lda_model_path = os.path.join(MODEL_DIR, 'lda_model.model')
+    lda_dict_path = os.path.join(MODEL_DIR, 'lda_dict.dict')
+    lda_model = models.LdaModel.load(lda_model_path)
+    lda_dictionary = corpora.Dictionary.load(lda_dict_path)
 
-    return optimal_model, dictionary
+    #LSI NAD LDA 
+    lsi_model_path = os.path.join(MODEL_DIR, 'optimal_lsi_model.model')
+    lsi_dict_path = os.path.join(MODEL_DIR, 'optimal_lsi_dict.dict')
+    lsi_tfidf_path = os.path.join(MODEL_DIR, 'optimal_lsi_tfidf.model')
+    lsi_model = models.LdaModel.load(lsi_model_path)
+    lsi_dictionary = corpora.Dictionary.load(lsi_dict_path)
+    lsi_tfidf_model = models.TfidfModel.load(lsi_tfidf_path)
+
+    #LDA with verb
+    optimal_lda_model_path = os.path.join(MODEL_DIR, 'optimal_lda_model.model')
+    optimal_lda_dict_path = os.path.join(MODEL_DIR, 'optimal_lda_dict.dict')
+    optimal_lda_model = models.LdaModel.load(optimal_lda_model_path)
+    optimal_lda_dictionary = corpora.Dictionary.load(optimal_lda_dict_path)
+
+    return lda_model, lda_dictionary , lsi_model , lsi_dictionary, optimal_lda_model, optimal_lda_dictionary , lsi_tfidf_model

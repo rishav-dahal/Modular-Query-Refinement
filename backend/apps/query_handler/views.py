@@ -11,31 +11,59 @@ def submit_query(request):
         data = json.loads(request.body)
         query = data.get("query")
         flag = data.get("flag")
-
+        lda_model, lda_dictionary , lsi_model , lsi_dictionary , optimal_lda_model, optimal_lda_dictionary , lsi_tfidf_model = load_models()
         if not query or not flag:
             return Response({"error":"Missing query or flag"}, status=status.HTTP_400_BAD_REQUEST)
 
-        preprocessed_query = preprocess(query)
-
         if flag == "LDA":
-            optimal_model, dictionary = load_models()
-            bow_query = dictionary.doc2bow(preprocessed_query)
-            topic_distribution = optimal_model.get_document_topics(bow_query)
+            preprocessed_query = preprocess(query,flag="LDA")
+            bow_query = lda_dictionary.doc2bow(preprocessed_query)
+            topic_distribution = lda_model.get_document_topics(bow_query)
             top_topic = max(topic_distribution, key=lambda x: x[1])[0]
-            keywords = optimal_model.show_topic(top_topic, topn=10)
+            keywords = lda_model.show_topic(top_topic, topn=10)
             return Response(keywords, status=status.HTTP_200_OK)
 
-        # elif flag == "LSI":
-        #     result = run_sbert(query)
-        # elif flag == "lda":
-        #     result = run_lda(query)
-        # else:
-        #     return Response({"error": f"Unsupported flag: {flag}"}, status=status.HTTP_400_BAD_REQUEST)
+        elif flag == "LSA":
+            preprocessed_query = preprocess(query,flag="NONE")
+            bow_query = lsi_dictionary.doc2bow(preprocessed_query)
+            tfidf_query = lsi_tfidf_model[bow_query]
+            topic_distribution = lsi_model[tfidf_query]
 
+            if topic_distribution:
+                top_topic_id = max(topic_distribution, key=lambda x: abs(x[1]))[0] # Use absolute value for LSI scores
+                print("\nDominant Topic ID: ", top_topic_id)
+
+                all_topics_terms = lsi_model.show_topics(num_topics=-1, formatted=False)
+                keywords = None
+                for topic_id, terms in all_topics_terms:
+                    if topic_id == top_topic_id:
+                        keywords = terms
+                        break
+
+                if keywords:
+                    # Sort keywords by absolute score and take the top N
+                    keywords = sorted(keywords, key=lambda x: abs(x[1]), reverse=True)[:10] # Top 10 keywords
+                    return Response(keywords, status=status.HTTP_200_OK)
+                else:
+                    return Response({"error": "No keywords found for the dominant topic."}, status=status.HTTP_404_NOT_FOUND)
+
+            else:
+                return Response({"error": "No topics found for the query."}, status=status.HTTP_404_NOT_FOUND)
+
+        elif flag == "LDA_VERB":
+            preprocessed_query = preprocess(query,flag="NONE")
+            bow_query = optimal_lda_dictionary.doc2bow(preprocessed_query)
+            topic_distribution = optimal_lda_model.get_document_topics(bow_query)
+            top_topic = max(topic_distribution, key=lambda x: x[1])[0]
+            keywords = optimal_lda_model.show_topic(top_topic, topn=10)
+            return Response(keywords, status=status.HTTP_200_OK)
         
+        elif flag == "BERT":
+            pass
+
+        else:
+            return Response({"error": f"Unsupported flag: {flag}"}, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
         print(f"Error processing query: {e}")
         return Response({"error": "something went wrong"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return Response({"error": "Only POST method is allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
