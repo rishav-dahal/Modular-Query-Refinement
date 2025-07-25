@@ -8,8 +8,8 @@ class Query(models.Model):
 
     id = models.AutoField(primary_key=True)
     raw_query = models.TextField()
-    refined_query = models.TextField()
+    keywords = models.JSONField(blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Query {self.id} by User {self.user_id}: {self.raw_query[:20]}..."
+        return f"Query {self.id}: {self.raw_query[:20]}..."
