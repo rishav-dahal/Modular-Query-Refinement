@@ -5,6 +5,8 @@ const toast = useToast()
 const config = useRuntimeConfig()
 const query = ref('')
 const response = ref("")
+const formattedResponse = ref("")
+const formattedResponseArray = ref<string[]>([])
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const isSubmitting = ref(false)
 const selectedAlgorithm = ref('')
@@ -63,6 +65,22 @@ function submitQuery() {
     }
     else{
         response.value = data.value?.response || "No response received."
+        
+        try {
+            const parsedResponse = JSON.parse(response.value)
+            if (Array.isArray(parsedResponse)) {
+                const keywords = parsedResponse.map(item => Array.isArray(item) ? item[0] : item)
+                formattedResponse.value = keywords.join(', ')
+                formattedResponseArray.value = keywords
+            } else {
+                formattedResponse.value = response.value
+                formattedResponseArray.value = [response.value]
+            }
+        } catch (error) {
+            formattedResponse.value = response.value
+            formattedResponseArray.value = [response.value]
+        }
+        
         toast.success('Query processed successfully!')
         setTimeout(() => {
             isSubmitting.value = false
@@ -226,8 +244,15 @@ function selectAlgorithm(algorithm: string) {
                                 <div
                                     class="bg-gray-800/30 backdrop-blur-sm rounded-2xl border border-gray-600/20 overflow-hidden">
                                     <div class="p-6 sm:p-8">
-                                        <pre
-                                            class="text-gray-200 leading-relaxed text-sm sm:text-base font-mono whitespace-pre-wrap break-words">{{ response }}</pre>
+                                        <div class="mb-4">
+                                            <h3 class="text-lg font-semibold text-gray-300 mb-2">Extracted Keywords:</h3>
+                                            <div class="flex flex-wrap gap-2">
+                                                <span v-for="keyword in formattedResponseArray" :key="keyword" 
+                                                      class="px-3 py-1 bg-gray-700/50 text-gray-200 rounded-full text-sm border border-gray-600/30">
+                                                    {{ keyword }}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
