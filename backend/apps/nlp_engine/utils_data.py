@@ -1,4 +1,5 @@
 from gensim import corpora, models
+import joblib
 from core.settings.base import MODEL_DIR
 def download_nltk_resources():
     """
@@ -49,4 +50,10 @@ def load_models():
     optimal_lda_model = models.LdaModel.load(optimal_lda_model_path)
     optimal_lda_dictionary = corpora.Dictionary.load(optimal_lda_dict_path)
 
-    return lda_model, lda_dictionary , lsi_model , lsi_dictionary, optimal_lda_model, optimal_lda_dictionary , lsi_tfidf_model
+    #BERT with kmeans
+    bert_model_path = os.path.join(MODEL_DIR, 'kmeans_model.model')
+    bert_dictionary_path = os.path.join(MODEL_DIR, 'kmeans_dict.dict')
+    bert_model = joblib.load(bert_model_path)
+    bert_dictionary = corpora.Dictionary.load(bert_dictionary_path)
+
+    return lda_model, lda_dictionary , lsi_model , lsi_dictionary, optimal_lda_model, optimal_lda_dictionary , lsi_tfidf_model, bert_model, bert_dictionary
