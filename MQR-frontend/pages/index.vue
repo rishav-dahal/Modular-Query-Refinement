@@ -1,11 +1,22 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-
+import { useToast } from 'vue-toastification'
+const toast = useToast()
 const config = useRuntimeConfig()
 const query = ref('')
 const response = ref("")
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const isSubmitting = ref(false)
+const selectedAlgorithm = ref('')
+const selectedSampleQuestion = ref('')
+
+const sampleQuestions = [
+    'Pain in urinary track',
+    'I have pain in my knee', 
+    'What causes diabetes?',
+    'How to prevent hearing loss',
+    'What causes low vision'
+]
 
 const resizeTextarea = () => {
     if (textareaRef.value) {
@@ -15,24 +26,52 @@ const resizeTextarea = () => {
 }
 
 watch(query, resizeTextarea)
+watch(selectedSampleQuestion, (newQuestion) => {
+    if (newQuestion) {
+        query.value = newQuestion
+        resizeTextarea()
+    }
+})
 onMounted(resizeTextarea)
 
 function submitQuery() {
+    if (!selectedAlgorithm.value) {
+        toast.warning('Please select an algorithm first!')
+        return
+    }
+    
+    if (!query.value.trim()) {
+        toast.warning('Please enter a query!')
+        return
+    }
+
     isSubmitting.value = true
+    
     const url = config.public.api.baseURL + 'query/submit/'
     const { data, error } = useFetch(url, {
-        method: 'POST',
-        body: { query: query.value }
+        method: 'GET',
+        body: { 
+            query: query.value,
+            algorithm: selectedAlgorithm.value
+        }
     })
     if (error.value) {
         console.error('Error submitting query:', error.value)
+        toast.error('Failed to submit query. Please try again.')
         isSubmitting.value = false
         return
     }
-    response.value = data.value?.response || "No response received."
-    setTimeout(() => {
-        isSubmitting.value = false
-    }, 1000)
+    else{
+        response.value = data.value?.response || "No response received."
+        toast.success('Query processed successfully!')
+        setTimeout(() => {
+            isSubmitting.value = false
+        }, 1000)
+    }
+}
+
+function selectAlgorithm(algorithm: string) {
+    selectedAlgorithm.value = algorithm
 }
 </script>
 
@@ -61,31 +100,87 @@ function submitQuery() {
                     <div
                         class="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl mb-8 overflow-hidden">
                         <div class="p-6 sm:p-8 lg:p-12">
+                            <!-- Algorithm Selection Buttons -->
+                            <div class="mb-8">
+                                <h3 class="text-white text-lg font-semibold mb-4 text-center">Select Algorithm</h3>
+                                <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
+                                    <button 
+                                        @click="selectAlgorithm('LDA')"
+                                        :class="[
+                                            'btn',
+                                            selectedAlgorithm === 'LDA' ? 'btn-selected' : 'btn-unselected'
+                                        ]">
+                                        LDA
+                                    </button>
+                                    <button 
+                                        @click="selectAlgorithm('LDA with coherence')"
+                                        :class="[
+                                            'btn',
+                                            selectedAlgorithm === 'LDA with coherence' ? 'btn-selected' : 'btn-unselected'
+                                        ]">
+                                        LDA with coherence
+                                    </button>
+                                    <button 
+                                        @click="selectAlgorithm('LSI')"
+                                        :class="[
+                                            'btn',
+                                            selectedAlgorithm === 'LSI' ? 'btn-selected' : 'btn-unselected'
+                                        ]">
+                                        LSI
+                                    </button>
+                                    <button 
+                                        @click="selectAlgorithm('Bert')"
+                                        :class="[
+                                            'btn',
+                                            selectedAlgorithm === 'Bert' ? 'btn-selected' : 'btn-unselected'
+                                        ]">
+                                        Bert
+                                    </button>
+                                </div>
+                                <div v-if="selectedAlgorithm" class="text-center mt-3">
+                                    <span class="text-gray-400 text-sm">Selected: {{ selectedAlgorithm }}</span>
+                                </div>
+                            </div>
 
                             <div class="relative mb-8">
                                 <textarea ref="textareaRef" v-model="query"
                                     placeholder="Enter your query here..." class="w-full min-h-[120px] sm:min-h-[150px] p-6 sm:p-8 bg-gray-800/50 backdrop-blur-sm border-2 border-gray-600/30 
                                            rounded-2xl text-white text-lg sm:text-xl leading-relaxed placeholder-gray-400
-                                           focus:outline-none focus:border-gray-500 focus:ring-4 focus:ring-gray-500/20 
+                                           focus:outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-700 
                                            resize-none transition-all duration-300 hover:border-gray-500/50"
                                     @keyup.enter="submitQuery" rows="4"></textarea>
 
                                 <div class="absolute bottom-4 right-6 flex items-center gap-3">
                                     <span class="text-gray-400 text-sm font-medium">{{ query.length }} chars</span>
-                                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-pulse"></div>
+                                </div>
+                            </div>
+
+                            <!-- Sample Questions Section -->
+                            <div class="mb-8">
+                                <div class=" flex flex-col sm:flex-row items-center justify-between gap-4 mb-4 *:bg-gray-800/40 *:px-2 *:py-1 *:rounded-xl *:hover:bg-gray-700/50 *:cursor-pointer">
+                                    <label 
+                                        v-for="question in sampleQuestions"
+                                        :key="question"
+                                        class=""
+                                        :class="{ 'border-gray-500 bg-gray-700/50': selectedSampleQuestion === question }">
+                                        <input 
+                                            type="radio" 
+                                            v-model="selectedSampleQuestion" 
+                                            :value="question"
+                                            class="sr-only">
+                                        <span class="text-gray-400 text-xs">{{ question }}</span>
+                                    </label>
                                 </div>
                             </div>
 
                             <div class="flex justify-center">
                                 <button @click="submitQuery" :disabled="!query.trim() || isSubmitting" class="group relative px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-gray-600 to-gray-700 
                                            text-white text-lg sm:text-xl font-bold rounded-2xl shadow-2xl 
-                                           hover:shadow-gray-500/25 transform transition-all duration-300 
-                                           hover:scale-105 hover:from-gray-500 hover:to-gray-600 
-                                           focus:outline-none focus:ring-4 focus:ring-gray-500/30 
-                                           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+                                           hover:shadow-gray-500/25
+                                           disabled:opacity-50 disabled:cursor-not-allowed
                                            min-w-[200px] sm:min-w-[250px]">
                                     <span v-if="!isSubmitting" class="flex items-center justify-center gap-3">
-                                        <svg class="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1 transition-transform duration-300"
+                                        <svg class="w-5 h-5 sm:w-6 sm:h-6"
                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
@@ -187,9 +282,8 @@ textarea::-webkit-scrollbar-thumb:hover {
     background: rgba(156, 163, 175, 0.7);
 }
 
-/* Responsive adjustments */
 @media (max-width: 640px) {
-    .min-h-[120px] {
+    textarea.min-h-120 {
         min-height: 100px;
     }
 }

@@ -1,1 +1,28 @@
 @import "tailwindcss";
+
+.btn {
+  padding: 1rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+.btn-selected {
+  background-color: rgb(75 85 99);
+  color: rgb(255 255 255);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.btn-unselected {
+  background-color: rgb(31 41 55 / 0.5);
+  color: rgb(209 213 219);
+}
+
+.btn-unselected:hover {
+  background-color: rgb(55 65 81 / 0.5);
+  color: rgb(255 255 255);
+}
