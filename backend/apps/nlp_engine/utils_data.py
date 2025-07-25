@@ -29,8 +29,8 @@ def load_models():
     """
     import os
 
-    optimal_lda_model = os.path.join(MODEL_DIR, 'optimal_lda_model.model')
-    optimal_lda_dict = os.path.join(MODEL_DIR, 'optimal_lda_dict.dict')
+    optimal_lda_model = os.path.join(MODEL_DIR, 'lda_model.model')
+    optimal_lda_dict = os.path.join(MODEL_DIR, 'lda_dict.dict')
     optimal_model = models.LdaModel.load(optimal_lda_model)
     dictionary = corpora.Dictionary.load(optimal_lda_dict)
 
