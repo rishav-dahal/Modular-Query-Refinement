@@ -49,12 +49,22 @@ async function submitQuery() {
 
     isSubmitting.value = true
     
+    // Map frontend display names to backend flag values
+    const algorithmMapping: Record<string, string> = {
+        'LDA': 'LDA',
+        'LDA with coherence': 'LDA_VERB',
+        'LSI': 'LSA',
+        'Bert': 'BERT'
+    }
+    
+    const backendFlag = algorithmMapping[selectedAlgorithm.value]
+    
     const url = config.public.api.baseURL + 'query/submit/'
     const { data, error } = await useFetch(url, {
         method: 'POST',
         body: { 
             query: query.value,
-            flag: selectedAlgorithm.value
+            flag: backendFlag
         }
     })
     if (error.value) {
@@ -64,20 +74,20 @@ async function submitQuery() {
         return
     }
     else{
-        response.value = data.value?.response || "No response received."
-        try {
-            const parsedResponse = JSON.parse(response.value)
-            if (Array.isArray(parsedResponse)) {
-                const keywords = parsedResponse.map(item => Array.isArray(item) ? item[0] : item)
-                formattedResponse.value = keywords.join(', ')
-                formattedResponseArray.value = keywords
-            } else {
-                formattedResponse.value = response.value
-                formattedResponseArray.value = [response.value]
-            }
-        } catch (error) {
-            formattedResponse.value = response.value
-            formattedResponseArray.value = [response.value]
+        // The backend returns data with 'keywords' property
+        const responseData = data.value as any
+        const keywords = responseData?.keywords || []
+        
+        if (Array.isArray(keywords) && keywords.length > 0) {
+            // Extract just the keyword text from [keyword, weight] pairs
+            const keywordTexts = keywords.map((item: any) => Array.isArray(item) ? item[0] : item)
+            formattedResponse.value = keywordTexts.join(', ')
+            formattedResponseArray.value = keywordTexts
+            response.value = JSON.stringify(keywords)
+        } else {
+            formattedResponse.value = "No keywords found"
+            formattedResponseArray.value = []
+            response.value = "No keywords found"
         }
         
         toast.success('Query processed successfully!')
