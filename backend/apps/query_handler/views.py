@@ -25,7 +25,7 @@ def submit_query(request):
             topic_distribution = lda_model.get_document_topics(bow_query)
             top_topic = max(topic_distribution, key=lambda x: x[1])[0]
             keywords = lda_model.show_topic(top_topic, topn=10)
-            return Response({"data":keywords}, status=status.HTTP_200_OK)
+            return Response(keywords, status=status.HTTP_200_OK)
 
         elif flag == "LSA":
             preprocessed_query = preprocess(query,flag="NONE")
