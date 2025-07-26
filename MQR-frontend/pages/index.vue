@@ -74,7 +74,7 @@ async function submitQuery() {
         return
     }
     else{
-        // The backend returns data with 'keywords' property
+        // The backend returns datas with 'keywords' property
         const responseData = data.value as any
         const keywords = responseData?.keywords || []
         
