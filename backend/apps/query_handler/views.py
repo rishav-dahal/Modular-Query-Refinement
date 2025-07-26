@@ -1,17 +1,21 @@
+# from .serializers import QuerySerializer
+import json
+from apps.nlp_engine.tokenization import preprocess
+from apps.nlp_engine.utils_data import load_models
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
-# from .serializers import QuerySerializer
-from apps.nlp_engine.tokenization import preprocess
-import json
-from apps.nlp_engine.utils_data import load_models
+# from sentence_transformers import SentenceTransformer
+
+
 @api_view(['POST'])
 def submit_query(request):
     try:
-        data = json.loads(request.body)
-        query = data.get("query")
-        flag = data.get("flag")
-        lda_model, lda_dictionary , lsi_model , lsi_dictionary , optimal_lda_model, optimal_lda_dictionary , lsi_tfidf_model = load_models()
+        query = request.data.get("query")
+        flag = request.data.get("flag")
+        lda_model, lda_dictionary , lsi_model , lsi_dictionary , optimal_lda_model, optimal_lda_dictionary , lsi_tfidf_model , bert_model, cluster_keywords, sentence_model = load_models()
+
+        print(f"Received query: {query} with flag: {flag}")
         if not query or not flag:
             return Response({"error":"Missing query or flag"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -21,7 +25,7 @@ def submit_query(request):
             topic_distribution = lda_model.get_document_topics(bow_query)
             top_topic = max(topic_distribution, key=lambda x: x[1])[0]
             keywords = lda_model.show_topic(top_topic, topn=10)
-            return Response(keywords, status=status.HTTP_200_OK)
+            return Response({"data":keywords}, status=status.HTTP_200_OK)
 
         elif flag == "LSA":
             preprocessed_query = preprocess(query,flag="NONE")
@@ -31,7 +35,6 @@ def submit_query(request):
 
             if topic_distribution:
                 top_topic_id = max(topic_distribution, key=lambda x: abs(x[1]))[0] # Use absolute value for LSI scores
-                print("\nDominant Topic ID: ", top_topic_id)
 
                 all_topics_terms = lsi_model.show_topics(num_topics=-1, formatted=False)
                 keywords = None
@@ -59,8 +62,11 @@ def submit_query(request):
             return Response(keywords, status=status.HTTP_200_OK)
         
         elif flag == "BERT":
-            pass
+            query_embedding = sentence_model.encode([query])
+            cluster_id = bert_model.predict(query_embedding)[0]
+            keywords =cluster_keywords.get(str(cluster_id))
 
+            return Response(keywords, status=status.HTTP_200_OK)
         else:
             return Response({"error": f"Unsupported flag: {flag}"}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -1,6 +1,10 @@
 from gensim import corpora, models
+from gensim.models import LsiModel
 import joblib
+from sentence_transformers import SentenceTransformer
+import os
 from core.settings.base import MODEL_DIR
+import json
 def download_nltk_resources():
     """
     Downloads necessary NLTK resources for tokenization, stopwords, lemmatization, and POS tagging.
@@ -28,7 +32,7 @@ def load_models():
     
     
     """
-    import os
+
 
     #LSA without verb
     lda_model_path = os.path.join(MODEL_DIR, 'lda_model.model')
@@ -40,7 +44,7 @@ def load_models():
     lsi_model_path = os.path.join(MODEL_DIR, 'optimal_lsi_model.model')
     lsi_dict_path = os.path.join(MODEL_DIR, 'optimal_lsi_dict.dict')
     lsi_tfidf_path = os.path.join(MODEL_DIR, 'optimal_lsi_tfidf.model')
-    lsi_model = models.LdaModel.load(lsi_model_path)
+    lsi_model = LsiModel.load(lsi_model_path)
     lsi_dictionary = corpora.Dictionary.load(lsi_dict_path)
     lsi_tfidf_model = models.TfidfModel.load(lsi_tfidf_path)
 
@@ -51,9 +55,13 @@ def load_models():
     optimal_lda_dictionary = corpora.Dictionary.load(optimal_lda_dict_path)
 
     #BERT with kmeans
-    bert_model_path = os.path.join(MODEL_DIR, 'kmeans_model.model')
-    bert_dictionary_path = os.path.join(MODEL_DIR, 'kmeans_dict.dict')
+    bert_model_path = os.path.join(MODEL_DIR, 'kmeans_model.pkl')
     bert_model = joblib.load(bert_model_path)
-    bert_dictionary = corpora.Dictionary.load(bert_dictionary_path)
+    sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
 
-    return lda_model, lda_dictionary , lsi_model , lsi_dictionary, optimal_lda_model, optimal_lda_dictionary , lsi_tfidf_model, bert_model, bert_dictionary
+    cluster_keywords_path = os.path.join(MODEL_DIR, "cluster_keywords.json")
+    with open(cluster_keywords_path, "r") as f:
+        cluster_keywords = json.load(f)
+
+
+    return lda_model, lda_dictionary , lsi_model , lsi_dictionary, optimal_lda_model, optimal_lda_dictionary , lsi_tfidf_model , bert_model, cluster_keywords, sentence_model

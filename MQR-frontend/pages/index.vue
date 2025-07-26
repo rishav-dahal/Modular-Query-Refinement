@@ -36,7 +36,7 @@ watch(selectedSampleQuestion, (newQuestion) => {
 })
 onMounted(resizeTextarea)
 
-function submitQuery() {
+async function submitQuery() {
     if (!selectedAlgorithm.value) {
         toast.warning('Please select an algorithm first!')
         return
@@ -50,11 +50,11 @@ function submitQuery() {
     isSubmitting.value = true
     
     const url = config.public.api.baseURL + 'query/submit/'
-    const { data, error } = useFetch(url, {
-        method: 'GET',
+    const { data, error } = await useFetch(url, {
+        method: 'POST',
         body: { 
             query: query.value,
-            algorithm: selectedAlgorithm.value
+            flag: selectedAlgorithm.value
         }
     })
     if (error.value) {
@@ -65,7 +65,6 @@ function submitQuery() {
     }
     else{
         response.value = data.value?.response || "No response received."
-        
         try {
             const parsedResponse = JSON.parse(response.value)
             if (Array.isArray(parsedResponse)) {
