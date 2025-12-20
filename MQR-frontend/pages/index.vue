@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import { useToast } from 'vue-toastification'
-const toast = useToast()
+const toast = useNuxtApp().$toast
 const config = useRuntimeConfig()
 const query = ref('')
 const response = ref("")
