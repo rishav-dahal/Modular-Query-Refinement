@@ -49,7 +49,7 @@ async function submitQuery() {
 
     isSubmitting.value = true
     
-    // Map frontend display names to backend flag values
+    // Map frontend display names to backend flag values.
     const algorithmMapping: Record<string, string> = {
         'LDA': 'LDA',
         'LDA with coherence': 'LDA_VERB',
@@ -74,7 +74,7 @@ async function submitQuery() {
         return
     }
     else{
-        // The backend returns data with 'keywords' property
+        // The backend returns datas with 'keywords' property
         const responseData = data.value as any
         const keywords = responseData?.keywords || []
         
