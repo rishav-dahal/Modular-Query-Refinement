@@ -25,8 +25,12 @@ def submit_query(request):
             topic_distribution = lda_model.get_document_topics(bow_query)
             top_topic = max(topic_distribution, key=lambda x: x[1])[0]
             keywords = lda_model.show_topic(top_topic, topn=10)
+            # Convert to native Python types for JSON serialization
+            keywords_py = [(str(k), float(v)) for k, v in keywords]
+            from .models import Query
+            Query.objects.create(raw_query=query, keywords=keywords_py)
             data = {
-                "keywords": keywords
+                "keywords": keywords_py
             }
             return Response(data, status=status.HTTP_200_OK)
 
@@ -50,8 +54,11 @@ def submit_query(request):
                 if keywords:
                     # Sort keywords by absolute score and take the top N
                     keywords = sorted(keywords, key=lambda x: abs(x[1]), reverse=True)[:10] # Top 10 keywords
+                    keywords_py = [(str(k), float(v)) for k, v in keywords]
+                    from .models import Query
+                    Query.objects.create(raw_query=query, keywords=keywords_py)
                     data = {
-                        "keywords": keywords,
+                        "keywords": keywords_py,
                     }
                     return Response(data, status=status.HTTP_200_OK)
                 else:
@@ -67,8 +74,11 @@ def submit_query(request):
             topic_distribution = optimal_lda_model.get_document_topics(bow_query)
             top_topic = max(topic_distribution, key=lambda x: x[1])[0]
             keywords = optimal_lda_model.show_topic(top_topic, topn=10)
+            keywords_py = [(str(k), float(v)) for k, v in keywords]
+            from .models import Query
+            Query.objects.create(raw_query=query, keywords=keywords_py)
             data = {
-                "keywords": keywords
+                "keywords": keywords_py
             }
             return Response(data, status=status.HTTP_200_OK)
 
@@ -77,10 +87,16 @@ def submit_query(request):
             query_embedding = sentence_model.encode([query])
             cluster_id = bert_model.predict(query_embedding)[0]
             keywords = cluster_keywords.get(str(cluster_id))
+            # keywords may be a list of strings or tuples, so convert if needed
+            if isinstance(keywords, list):
+                keywords_py = [(str(k), float(v)) if isinstance(k, (list, tuple)) and len(k) == 2 else str(k) for k, v in keywords] if keywords and isinstance(keywords[0], (list, tuple)) else [str(k) for k in keywords]
+            else:
+                keywords_py = keywords
+            from .models import Query
+            Query.objects.create(raw_query=query, keywords=keywords_py)
             data = {
-                "keywords": keywords
+                "keywords": keywords_py
             }
-
             return Response(data, status=status.HTTP_200_OK)
         else:
             return Response({"error": f"Unsupported flag: {flag}"}, status=status.HTTP_400_BAD_REQUEST)
