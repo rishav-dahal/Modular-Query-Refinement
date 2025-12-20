@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    restart: always
+    environment:
+      - ENV=prod
+
+  frontend:
+    build:
+      context: ./MQR-frontend
+    command: "npm run dev"
+    working_dir: /app
+    volumes:
+      - ./MQR-frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - HOST=0.0.0.0
+    restart: always
