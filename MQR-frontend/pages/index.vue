@@ -47,52 +47,46 @@ async function submitQuery() {
     }
 
     isSubmitting.value = true
-    
-    // Map frontend display names to backend flag values.
-    const algorithmMapping: Record<string, string> = {
-        'LDA': 'LDA',
-        'LDA with coherence': 'LDA_VERB',
-        'LSI': 'LSA',
-        'Bert': 'BERT'
-    }
-    
-    const backendFlag = algorithmMapping[selectedAlgorithm.value]
-    
-    const url = config.public.api.baseURL + 'query/submit/'
-    const { data, error } = await useFetch(url, {
-        method: 'POST',
-        body: { 
-            query: query.value,
-            flag: backendFlag
+    try {
+        // Map frontend display names to backend flag values.
+        const algorithmMapping: Record<string, string> = {
+            'LDA': 'LDA',
+            'LDA with coherence': 'LDA_VERB',
+            'LSI': 'LSA',
+            'Bert': 'BERT'
         }
-    })
-    if (error.value) {
-        console.error('Error submitting query:', error.value)
-        toast.error('Failed to submit query. Please try again.')
-        isSubmitting.value = false
-        return
-    }
-    else{
-        // The backend returns datas with 'keywords' property
-        const responseData = data.value as any
-        const keywords = responseData?.keywords || []
-        
-        if (Array.isArray(keywords) && keywords.length > 0) {
-            // Extract just the keyword text from [keyword, weight] pairs
-            const keywordTexts = keywords.map((item: any) => Array.isArray(item) ? item[0] : item)
-            formattedResponse.value = keywordTexts.join(', ')
-            formattedResponseArray.value = keywordTexts
-            response.value = JSON.stringify(keywords)
+        const backendFlag = algorithmMapping[selectedAlgorithm.value]
+        const url = config.public.api.baseURL + 'query/submit/'
+        const { data, error } = await useFetch(url, {
+            method: 'POST',
+            body: { 
+                query: query.value,
+                flag: backendFlag
+            }
+        })
+        if (error.value) {
+            console.error('Error submitting query:', error.value)
+            toast.error('Failed to submit query. Please try again.')
+            return
         } else {
-            formattedResponse.value = "No keywords found"
-            formattedResponseArray.value = []
-            response.value = "No keywords found"
+            // The backend returns datas with 'keywords' property
+            const responseData = data.value as any
+            const keywords = responseData?.keywords || []
+            if (Array.isArray(keywords) && keywords.length > 0) {
+                // Extract just the keyword text from [keyword, weight] pairs
+                const keywordTexts = keywords.map((item: any) => Array.isArray(item) ? item[0] : item)
+                formattedResponse.value = keywordTexts.join(', ')
+                formattedResponseArray.value = keywordTexts
+                response.value = JSON.stringify(keywords)
+            } else {
+                formattedResponse.value = "No keywords found"
+                formattedResponseArray.value = []
+                response.value = "No keywords found"
+            }
+            toast.success('Query processed successfully!')
         }
-        
-        toast.success('Query processed successfully!')
-        setTimeout(() => {
-            isSubmitting.value = false
-        }, 1000)
+    } finally {
+        isSubmitting.value = false
     }
 }
 
