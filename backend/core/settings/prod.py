@@ -1,9 +1,10 @@
 from .base import *
 import os
 from dotenv import load_dotenv
+import json
 
 # Load prod environment variables from .env.prod
-load_dotenv(ROOT_DIR / ".env.prod")
+load_dotenv(ROOT_DIR / ".env")
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
@@ -25,3 +26,10 @@ DATABASES = {
         "PORT": os.getenv("DB_PORT"),
     }
 }
+
+# CORS settings for production
+CORS_ALLOWED_ORIGINS = json.loads(os.environ.get("CORS_ALLOWED_ORIGINS", "[\"http://localhost:3000\", \"http://localhost:3001\", \"http://localhost:3002\", \"http://127.0.0.1:3000\"]"))
+CORS_ALLOW_CREDENTIALS = os.environ.get("CORS_ALLOW_CREDENTIALS", "True") == "True"
+CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "False") == "True"
+CORS_ALLOW_HEADERS = json.loads(os.environ.get("CORS_ALLOW_HEADERS", "[\"accept\", \"accept-encoding\", \"authorization\", \"content-type\", \"dnt\", \"origin\", \"user-agent\", \"x-csrftoken\", \"x-requested-with\"]"))
+CORS_ALLOW_METHODS = json.loads(os.environ.get("CORS_ALLOW_METHODS", "[\"DELETE\", \"GET\", \"OPTIONS\", \"PATCH\", \"POST\", \"PUT\"]"))
