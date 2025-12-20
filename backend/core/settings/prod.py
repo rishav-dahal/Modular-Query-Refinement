@@ -3,18 +3,18 @@ import os
 from dotenv import load_dotenv
 import json
 
-# Load prod environment variables from .env.prod
+
 load_dotenv(ROOT_DIR / ".env")
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
-    raise ValueError("SECRET_KEY must be set in .env.prod")
+    raise ValueError("SECRET_KEY must be set in .env")
 
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 if ALLOWED_HOSTS == [""]:
-    raise ValueError("ALLOWED_HOSTS must be set in .env.prod")
+    raise ValueError("ALLOWED_HOSTS must be set in .env")
 
 DATABASES = {
     "default": {
