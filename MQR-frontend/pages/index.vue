@@ -14,9 +14,7 @@ const selectedSampleQuestion = ref('')
 const sampleQuestions = [
     'Pain in urinary track',
     'I have pain in my knee', 
-    'What causes diabetes?',
-    'How to prevent hearing loss',
-    'What causes low vision'
+    'What causes diabetes?'
 ]
 
 const resizeTextarea = () => {
